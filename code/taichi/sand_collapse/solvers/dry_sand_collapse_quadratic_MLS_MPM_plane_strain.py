@@ -28,7 +28,7 @@ sys.path.append("..")
 # materials
 from materials.drucker_prager import *
 
-ti.init(arch=ti.gpu) # Initialize Taichi according to hardware platform (for more information please refer to https://taichi.readthedocs.io/en/stable/hello.html?highlight=ti.gpu)
+ti.init(arch=ti.cpu) # Initialize Taichi according to hardware platform (for more information please refer to https://taichi.readthedocs.io/en/stable/hello.html?highlight=ti.gpu)
 # ti.init(arch=ti.cpu, default_fp=ti.f64) # use double precision
 
 
@@ -60,10 +60,13 @@ boundary_friction_coeff = 0.3 #0.2 # 0.2 for 33 #0.17 for 37
 tol = 1e-12
 
 # Column collapse geometry (initial geometry sizes. Please see Fig. 2 in [Neto, Borja, ActaGeo, 2018])
-d0 = 0.2
+d0 = 0.2 # half-width of sandbox
 h0 = 0.4 #1.6
 center_line_x = n_grid * dx / 2
 start_x = center_line_x - d0 # the minimum x coordinate
+tmp_dist = start_x - 2*dx # 0.76 m
+print(dx)
+start_x = start_x + (np.random.rand()*2 -1) * (tmp_dist)
 
 
 p_vol = 2*d0*h0/max_num_s_particles
@@ -94,7 +97,8 @@ grid_sf = ti.Vector.field(dim, dtype=float, shape=(n_grid, n_grid)) # grid sand 
 # scale_factor = 1.0 / max_x * 2.2
 center_line_shift = max_x/2 - 1.0/2
 
-scale_factor = 1.0/max_x * 1.2
+# scale_factor = 1.0/max_x * 1.2
+scale_factor = 1.0/max_x * 0.5
 
 
 
@@ -294,8 +298,10 @@ def initialize():
 
 	# Homogeneous initialization (2x2 PPC)
 	new_particle_id = 0
-	for i, j in grid_sm:
-		if i*dx >= start_x and i*dx < start_x + 2*d0 and j >= 2 and j*dx < 2*dx + h0: # (2.0m x 2.0m computation domain)
+
+	start_y = np.random.rand()*1.52 + 0.04 # start height # min_y = 2*dx = 0.04 m; max_y = 2.0 - 2*dx - h0 = 2 - 0.04 - 0.4 = 1.56 m
+	for i, j in grid_sm: # grid_sm
+		if i*dx >= start_x and i*dx < start_x + 2*d0 and j*dx > 2*dx + start_y and j*dx < 2*dx + h0 + start_y: # (2.0m x 2.0m computation domain)
 			new_particle_id = ti.atomic_add(n_s_particles[None], 1)
 			x_s[new_particle_id] = [i * dx + 0.25 * dx, j * dx + 0.25 * dx]
 			v_s[new_particle_id] = ti.Matrix([0,0])
@@ -357,12 +363,42 @@ print('center line x: ', center_line_x)
 print('run out distance: ', d_inf)
 
 
+
+################# pixelize ################
+import matplotlib.pyplot as plt
+
+width_fig = 100 # even number
+
+def pixelize(x_array, v_array):
+	pixelized = np.zeros((width_fig, width_fig))
+	pixelized_vx = np.zeros((width_fig, width_fig))
+	pixelized_vy = np.zeros((width_fig, width_fig))
+	for idx, [x_o, y_o] in enumerate(x_array):
+		pixelized[int(x_o*width_fig/2), int(y_o*width_fig/2)] += 1
+		pixelized_vx[int(x_o*width_fig/2), int(y_o*width_fig/2)] = v_array[idx, 0]
+		pixelized_vy[int(x_o*width_fig/2), int(y_o*width_fig/2)] = v_array[idx, 1]
+	return pixelized, pixelized_vx, pixelized_vy
+
+data = np.zeros((width_fig, width_fig))
+fig, ax_list = plt.subplots(1, 3)
+fig.show()
+fig.canvas.draw()
+
 total_step = 0
+frame_cnt = 0
+
+v_numpy = np.zeros(1600)
+##############################################
+
+
 while True:
 # for total_step in range(50000): # 150 frames
 	for step in range(50):
 		total_step += 1
 		load_step(total_step)
+
+	frame_cnt += 1
+
 
 
 
@@ -379,17 +415,33 @@ while True:
 
 
 	# gui.show()
-	gui.show(f'../animation/sand_collapse_{gui.frame:06d}.png')
+	# gui.show(f'../animation/sand_collapse_{gui.frame:06d}.png')
 
 	# Show time
 	current_time = max(total_step-500, 0) * dt
-	gui.text(content=f'Time: {current_time:.2f} s' , pos=(0.4,0.8), color=0x0, font_size=42)
+	# gui.text(content=f'Time: {current_time:.2f} s' , pos=(0.4,0.8), color=0x0, font_size=42)
 
+	# output velocity
+	x_numpy = x_s.to_numpy()
+	v_numpy = v_s.to_numpy()
+	# np.savetxt(f'../data/sand_velocity_data_{gui.frame:06d}.csv', velocity_numpy)
 
+	
 
-	x_s_to_numpy = x_s.to_numpy()
-	np.savetxt(f'../data/sand_data_{gui.frame:06d}.csv', x_s_to_numpy)
+	# Pixelizing the taichi
+	if frame_cnt > 1:
+		data, data_vx, data_vy = pixelize(x_numpy, v_numpy)
+		print(np.min(v_numpy), np.max(v_numpy))
 
+		# plot pixlized
+		if frame_cnt%10 == 0:
+			ax_list = ax_list.ravel()
+			ax_list[0].imshow(np.flip(data.transpose(), 0), vmax=10, vmin=0, cmap='gray_r')
+			ax_list[1].imshow(np.flip(data_vx.transpose(), 0), vmax=10, vmin=-10, cmap='gray_r')
+			ax_list[2].imshow(np.flip(data_vy.transpose(), 0), vmax=10, vmin=-10, cmap='gray_r')
+			plt.pause(0.01)
+
+		fig.canvas.draw()
 
 	# Export ply file
 	if total_step*dt > 1.5 and export_file:
