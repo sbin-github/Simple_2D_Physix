@@ -1,2 +1,3 @@
 /code/taichi/sand_collapse/data/*
 /code/taichi/sand_collapse/animation/*
+/code/taichi/sand_collapse/solvers/data/*
