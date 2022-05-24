@@ -473,25 +473,29 @@ def run():
 						# print(c)
 						i += c
 				nums.append(int(i))
-				print(nums)
+			# print(nums)
+			save_num = int(np.max(nums)+1)
+			print(save_num)
 
-			np.save('data/sequence_{}.npy'.format(int(np.max(nums)+1)), frame_history)
+			np.save('data/sequence_{}.npy'.format(save_num), frame_history)
 			break
 
 
 if __name__ == '__main__':
 	freeze_support()
 	for i in range(10000):
+
 		tic = time.time()
 		p1 =  multiprocessing.Process(target= run)
 		p2 =  multiprocessing.Process(target= run)
 		p1.start()
+		time.sleep(0.1)
 		p2.start()
 		p1.join()
 		p2.join()
 		toc = time.time()
 
-		print('Done in {:.4f} seconds'.format(toc-tic))
+	print('Done in {:.4f} seconds'.format(toc-tic))
 
 
 
