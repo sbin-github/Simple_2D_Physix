@@ -387,7 +387,7 @@ def run():
 
 
 	### plot? ###
-	lets_plot = False
+	lets_plot = True
 
 	if lets_plot:
 		fig, ax_list = plt.subplots(1, 4)
@@ -466,7 +466,7 @@ def run():
 		# Export ply file
 		if total_step*dt >= 1. and export_file:
 			nums = [0]
-			for filename in os.listdir('data'):
+			for filename in os.listdir('data/npy'):
 				i = ''
 				for c in filename:
 					if c.isdigit():
@@ -477,7 +477,7 @@ def run():
 			save_num = int(np.max(nums)+1)
 			print(save_num)
 
-			np.save('data/sequence_{}.npy'.format(save_num), frame_history)
+			np.save('data/npy/sequence_{}.npy'.format(save_num), frame_history)
 			break
 
 
