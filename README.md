@@ -6,6 +6,8 @@ Please generate 'model' and 'npy' folders in the following directory:
 'code/taichi/sand_collapse/solvers/data'
 
 ## Generate momentum npy data
+Need to generate dataset for training and test from physical simulation.
+
 $cd code/taichi/sand_collapse/solvers
 
 $python3 dry_sand_collapse_quadratic_MLS_MPM_plane_strain.py
