@@ -1,6 +1,6 @@
 # Simple_2D_Physix
 
-The codes should be run in each local dir. containing the code file!
+The codes should be run in each local directory that containing the code file!
 
 Please generate 'model' and 'npy' folders in the following directory: 
 'code/taichi/sand_collapse/solvers/data'
