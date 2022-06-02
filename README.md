@@ -7,6 +7,7 @@ Please generate 'model' and 'npy' folders in the following directory:
 
 ## Generate momentum npy data
 $cd code/taichi/sand_collapse/solvers
+
 $python3 dry_sand_collapse_quadratic_MLS_MPM_plane_strain.py
 
 ## Generate torch tensor dataset from npy data

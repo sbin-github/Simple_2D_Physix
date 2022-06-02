@@ -378,19 +378,28 @@ def run():
 		pixelized_vx = np.zeros((width_fig, width_fig))
 		pixelized_vy = np.zeros((width_fig, width_fig))
 		for idx, [x_o, y_o] in enumerate(x_array):
-			pixelized[int(x_o*width_fig/2), int(y_o*width_fig/2)] += 1
-			pixelized_vx[int(x_o*width_fig/2), int(y_o*width_fig/2)] = v_array[idx, 0]
-			pixelized_vy[int(x_o*width_fig/2), int(y_o*width_fig/2)] = v_array[idx, 1]
+			pix_x = int(x_o*width_fig/2)
+			pix_y = int(y_o*width_fig/2)
+			pixelized[pix_x, pix_y] += 1
+			pixelized_vx[pix_x, pix_y] = v_array[idx, 0]
+			pixelized_vy[pix_x, pix_y] = v_array[idx, 1]
 		return pixelized, pixelized_vx, pixelized_vy
 
 	data = np.zeros((width_fig, width_fig))
+	wall = np.zeros((width_fig, width_fig))
+	wall[-2:, :] += 10
+	wall[:2, :] += 10
+	wall[:, 0] += 10
+	# plt.imshow(np.flip(wall.transpose(), 0))
+	# plt.show()
+	# wall[] 
 
 
 	### plot? ###
-	lets_plot = True
+	lets_plot = False
 
 	if lets_plot:
-		fig, ax_list = plt.subplots(1, 4)
+		fig, ax_list = plt.subplots(1, 4, figsize=(10,40))
 		fig.show()
 		fig.canvas.draw()
 		tmpmtx_cplot = [[[0, 0.5, 0.5] for i in range(width_fig)] for i in range(width_fig)]
@@ -443,8 +452,8 @@ def run():
 
 		# Pixelizing the taichi
 		data, data_vx, data_vy = pixelize(x_numpy, v_numpy)
-		# print(np.min(v_numpy), np.max(v_numpy))
-		np_frame = np.concatenate((data.reshape(width_fig, width_fig, 1), data_vx.reshape(width_fig, width_fig, 1), data_vy.reshape(width_fig, width_fig, 1)), -1)
+		print(np.min((x_numpy[:,0]*width_fig/2).astype(int)), np.max((x_numpy[:,0]*width_fig/2).astype(int)), np.min((x_numpy[:,1]*width_fig/2).astype(int)), np.max((x_numpy[:,1]*width_fig/2).astype(int)))
+		np_frame = np.concatenate((data.reshape(width_fig, width_fig, 1), data_vx.reshape(width_fig, width_fig, 1), data_vy.reshape(width_fig, width_fig, 1), wall.reshape(width_fig, width_fig, 1)), -1)
 		# print(np_frame.shape)
 
 		# plot pixlized
@@ -453,7 +462,9 @@ def run():
 			ax_list[0].imshow(np.flip(data.transpose(), 0), vmax=10, vmin=0, cmap='gray_r')
 			ax_list[1].imshow(np.flip(data_vx.transpose(), 0), vmax=10, vmin=-10, cmap='Greens')
 			ax_list[2].imshow(np.flip(data_vy.transpose(), 0), vmax=10, vmin=-10, cmap='Blues')
-			ax_list[3].imshow(np.multiply(np_frame, tmpmtx_cplot_mul) + tmpmtx_cplot)
+			ax_list[3].imshow(np.flip(wall.transpose(), 0), cmap='gray_r')
+
+			# ax_list[3].imshow(np.multiply(np_frame, tmpmtx_cplot_mul) + tmpmtx_cplot)
 			plt.pause(0.01)
 
 		# fig.canvas.draw()
@@ -466,7 +477,7 @@ def run():
 		# Export ply file
 		if total_step*dt >= 1. and export_file:
 			nums = [0]
-			for filename in os.listdir('data/npy'):
+			for filename in os.listdir('data/npy_4ch'):
 				i = ''
 				for c in filename:
 					if c.isdigit():
@@ -477,13 +488,13 @@ def run():
 			save_num = int(np.max(nums)+1)
 			print(save_num)
 
-			np.save('data/npy/sequence_{}.npy'.format(save_num), frame_history)
+			np.save('data/npy_4ch/sequence_{}.npy'.format(save_num), frame_history)
 			break
 
 
 if __name__ == '__main__':
 	freeze_support()
-	for i in range(10000):
+	for i in range(400):
 
 		tic = time.time()
 		p1 =  multiprocessing.Process(target= run)
@@ -494,7 +505,7 @@ if __name__ == '__main__':
 		p1.join()
 		p2.join()
 		toc = time.time()
-
+	# run()
 	print('Done in {:.4f} seconds'.format(toc-tic))
 
 
