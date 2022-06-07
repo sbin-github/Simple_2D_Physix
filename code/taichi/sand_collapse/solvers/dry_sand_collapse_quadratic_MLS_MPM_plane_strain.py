@@ -453,7 +453,7 @@ def run():
 		# Pixelizing the taichi
 		data, data_vx, data_vy = pixelize(x_numpy, v_numpy)
 		print(np.min((x_numpy[:,0]*width_fig/2).astype(int)), np.max((x_numpy[:,0]*width_fig/2).astype(int)), np.min((x_numpy[:,1]*width_fig/2).astype(int)), np.max((x_numpy[:,1]*width_fig/2).astype(int)))
-		np_frame = np.concatenate((data.reshape(width_fig, width_fig, 1), data_vx.reshape(width_fig, width_fig, 1), data_vy.reshape(width_fig, width_fig, 1), wall.reshape(width_fig, width_fig, 1)), -1)
+		np_frame = np.concatenate((data.reshape(width_fig, width_fig, 1), data_vx.reshape(width_fig, width_fig, 1), data_vy.reshape(width_fig, width_fig, 1)), -1)
 		# print(np_frame.shape)
 
 		# plot pixlized
@@ -462,9 +462,9 @@ def run():
 			ax_list[0].imshow(np.flip(data.transpose(), 0), vmax=10, vmin=0, cmap='gray_r')
 			ax_list[1].imshow(np.flip(data_vx.transpose(), 0), vmax=10, vmin=-10, cmap='Greens')
 			ax_list[2].imshow(np.flip(data_vy.transpose(), 0), vmax=10, vmin=-10, cmap='Blues')
-			ax_list[3].imshow(np.flip(wall.transpose(), 0), cmap='gray_r')
+			# ax_list[3].imshow(np.flip(wall.transpose(), 0), cmap='gray_r')
 
-			# ax_list[3].imshow(np.multiply(np_frame, tmpmtx_cplot_mul) + tmpmtx_cplot)
+			ax_list[3].imshow(np.multiply(np_frame, tmpmtx_cplot_mul) + tmpmtx_cplot)
 			plt.pause(0.01)
 
 		# fig.canvas.draw()
@@ -477,7 +477,7 @@ def run():
 		# Export ply file
 		if total_step*dt >= 1. and export_file:
 			nums = [0]
-			for filename in os.listdir('data/npy_4ch'):
+			for filename in os.listdir('data/npy'):
 				i = ''
 				for c in filename:
 					if c.isdigit():
@@ -488,7 +488,7 @@ def run():
 			save_num = int(np.max(nums)+1)
 			print(save_num)
 
-			np.save('data/npy_4ch/sequence_{}.npy'.format(save_num), frame_history)
+			np.save('data/npy/sequence_{}.npy'.format(save_num), frame_history)
 			break
 
 
